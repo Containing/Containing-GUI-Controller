@@ -142,7 +142,7 @@ public class MainFrame extends javax.swing.JFrame {
         if(file != null) {
             jTextAreaDebug.append("Loading " + file + System.lineSeparator());
             try {
-                XMLBinder.GenerateContainerDatabase(file);
+                XMLBinder.GenerateContainerDatabase(dialog.getDirectory() + dialog.getFile());
             }
             catch(Exception e) {
                 jTextAreaDebug.append("Failed loading file: " + e.getMessage() + System.lineSeparator());
