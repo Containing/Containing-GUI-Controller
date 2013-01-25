@@ -4,8 +4,12 @@
  */
 package containing.gui.controller;
 import Main.Controller;
+import Main.Database;
 import XML.XMLBinder;
 import java.awt.FileDialog;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -13,7 +17,8 @@ import java.awt.FileDialog;
  */
 public class MainFrame extends javax.swing.JFrame {
 
-    Controller controller;
+    private Controller controller;
+    private SwingWorker worker;
     
     /**
      * Creates new form MainFrame
@@ -102,6 +107,9 @@ public class MainFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonLoadXMLMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonLoadXMLMouseClicked
+        if(worker != null)
+            worker.cancel(true);
+        
         FileDialog dialog = new FileDialog(this);
         dialog.setVisible(true);
         dialog.setMode(FileDialog.LOAD);
@@ -109,12 +117,30 @@ public class MainFrame extends javax.swing.JFrame {
         if(file != null) {
             jTextAreaDebug.append("Loading " + file + System.lineSeparator());
             try {
+                Database.closeConnection();
                 XMLBinder.GenerateContainerDatabase(dialog.getDirectory() + dialog.getFile());
             }
             catch(Exception e) {
                 jTextAreaDebug.append("Failed loading file: " + e.getMessage() + System.lineSeparator());
             }
         }
+        
+        repaint(); // So we're sure jTextAreaDebug gets updated whilst waiting
+        
+        worker = new SwingWorker() {
+            @Override
+            protected Object doInBackground() throws Exception {
+                if(controller != null)
+                    controller.Teardown();
+            
+                controller = new Controller();
+                
+                while(true && controller != null)
+                    controller.Run();
+                return null;
+            }
+        };
+        worker.execute();
     }//GEN-LAST:event_jButtonLoadXMLMouseClicked
 
     /**
